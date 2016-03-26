@@ -133,7 +133,7 @@ namespace LinqToDB.DataProvider.Informix
 			try
 			{
 				var getValue = Expression.Lambda<Func<object>>(Expression.Convert(Expression.Field(null, type, "Null"), typeof(object)));
-				return getValue.Compile()();
+				return getValue.Compile();
 			}
 			catch (SecurityException)
 			{
