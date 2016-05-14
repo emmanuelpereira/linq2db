@@ -91,31 +91,49 @@ namespace LinqToDB.Data
 			DataProvider   = dataProvider;
 			_mappingSchema = DataProvider.MappingSchema;
 			_connection    = connection;
-		}
+        }
 
-		public DataConnection([JetBrains.Annotations.NotNull] IDataProvider dataProvider, [JetBrains.Annotations.NotNull] IDbTransaction transaction)
-		{
-			if (dataProvider == null) throw new ArgumentNullException("dataProvider");
-			if (transaction  == null) throw new ArgumentNullException("transaction");
-			
-			InitConfig();
+        public DataConnection([JetBrains.Annotations.NotNull] IDataProvider dataProvider, [JetBrains.Annotations.NotNull] IDbTransaction transaction)
+        {
+            if (dataProvider == null) throw new ArgumentNullException("dataProvider");
+            if (transaction == null) throw new ArgumentNullException("transaction");
 
-			if (!Configuration.AvoidSpecificDataProviderAPI && !dataProvider.IsCompatibleConnection(transaction.Connection))
-				throw new LinqToDBException(
-					"DataProvider '{0}' and connection '{1}' are not compatible.".Args(dataProvider, transaction.Connection));
+            InitConfig();
 
-			DataProvider      = dataProvider;
-			_mappingSchema    = DataProvider.MappingSchema;
-			_connection       = transaction.Connection;
-			Transaction       = transaction;
-			_closeTransaction = false;
-		}
+            if (!Configuration.AvoidSpecificDataProviderAPI && !dataProvider.IsCompatibleConnection(transaction.Connection))
+                throw new LinqToDBException(
+                    "DataProvider '{0}' and connection '{1}' are not compatible.".Args(dataProvider, transaction.Connection));
 
-		#endregion
+            DataProvider = dataProvider;
+            _mappingSchema = DataProvider.MappingSchema;
+            _connection = transaction.Connection;
+            Transaction = transaction;
+            _closeTransaction = false;
+        }
 
-		#region Public Properties
+        public DataConnection([JetBrains.Annotations.NotNull] IDataProvider dataProvider, [JetBrains.Annotations.NotNull] IDbConnection connection, [JetBrains.Annotations.NotNull] IDbTransaction transaction)
+        {
+            if (dataProvider == null) throw new ArgumentNullException("dataProvider");
+            if (connection == null) throw new ArgumentNullException("connection");
 
-		public string        ConfigurationString { get; private set; }
+            InitConfig();
+
+            if (!Configuration.AvoidSpecificDataProviderAPI && !dataProvider.IsCompatibleConnection(connection))
+                throw new LinqToDBException(
+                    "DataProvider '{0}' and connection '{1}' are not compatible.".Args(dataProvider, connection));
+
+            DataProvider = dataProvider;
+            _mappingSchema = DataProvider.MappingSchema;
+            _connection = connection;
+            Transaction = transaction;
+            _closeTransaction = false;
+        }
+
+        #endregion
+
+        #region Public Properties
+
+        public string        ConfigurationString { get; private set; }
 		public IDataProvider DataProvider        { get; private set; }
 		public string        ConnectionString    { get; private set; }
 
