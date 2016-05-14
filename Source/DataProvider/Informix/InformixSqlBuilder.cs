@@ -52,7 +52,18 @@ namespace LinqToDB.DataProvider.Informix
 				base.BuildSelectClause();
 		}
 
-		protected override string FirstFormat { get { return "FIRST {0}"; } }
+        protected override void BuildCreateTableNullAttribute(SqlField field, DefaulNullable defaulNullable)
+        {           
+            if (defaulNullable == DefaulNullable.Null && field.CanBeNull)
+                return;
+
+            if (defaulNullable == DefaulNullable.NotNull && !field.CanBeNull)
+                return;
+
+            StringBuilder.Append(field.CanBeNull ? "    " : "NOT NULL");
+        }
+
+        protected override string FirstFormat { get { return "FIRST {0}"; } }
 		protected override string SkipFormat  { get { return "SKIP {0}";  } }
 
 		protected override void BuildLikePredicate(SelectQuery.Predicate.Like predicate)
