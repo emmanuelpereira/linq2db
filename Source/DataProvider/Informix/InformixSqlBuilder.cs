@@ -6,10 +6,11 @@ using System.Text;
 
 namespace LinqToDB.DataProvider.Informix
 {
-	using SqlQuery;
-	using SqlProvider;
+    using SqlQuery;
+    using SqlProvider;
+    using Common;
 
-	class InformixSqlBuilder : BasicSqlBuilder
+    class InformixSqlBuilder : BasicSqlBuilder
 	{
 		public InformixSqlBuilder(ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags, ValueToSqlConverter valueToSqlConverter)
 			: base(sqlOptimizer, sqlProviderFlags, valueToSqlConverter)
@@ -157,9 +158,22 @@ namespace LinqToDB.DataProvider.Informix
 			StringBuilder.Append(")");
 		}
 
+        public override ISqlExpression GetIdentityExpression(SqlTable table)
+        {
+            if (!table.SequenceAttributes.IsNullOrEmpty())
+            {
+                var attr = GetSequenceNameAttribute(table, false);
+
+                if (attr != null)
+                    return new SqlExpression(attr.SequenceName + ".nextval", Precedence.Primary);
+            }
+
+            return base.GetIdentityExpression(table);
+        }
+
 #if !SILVERLIGHT
 
-		protected override string GetProviderTypeName(IDbDataParameter parameter)
+        protected override string GetProviderTypeName(IDbDataParameter parameter)
 		{
 			dynamic p = parameter;
 			return p.IfxType.ToString();

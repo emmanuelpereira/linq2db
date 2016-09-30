@@ -592,23 +592,30 @@ namespace LinqToDB.Linq
 
 						foreach (var field in sqlTable.Fields)
 						{
-							if (field.Value.IsInsertable)
-							{
-								var param = GetParameter(dataContextInfo.DataContext, field.Value);
+                            if (field.Value.IsInsertable)
+                            {
+                                var param = GetParameter(dataContextInfo.DataContext, field.Value);
 
-								ei.Queries[0].Parameters.Add(param);
+                                ei.Queries[0].Parameters.Add(param);
 
-								sqlQuery.Insert.Items.Add(new SelectQuery.SetExpression(field.Value, param.SqlParameter));
-							}
-							else if (field.Value.IsIdentity)
-							{
-								var sqlb = dataContextInfo.CreateSqlBuilder();
-								var expr = sqlb.GetIdentityExpression(sqlTable);
+                                sqlQuery.Insert.Items.Add(new SelectQuery.SetExpression(field.Value, param.SqlParameter));
+                            }
+                            else if (field.Value.IsIdentity)
+                            {
+                                var sqlb = dataContextInfo.CreateSqlBuilder();
+                                var expr = sqlb.GetIdentityExpression(sqlTable);
 
-								if (expr != null)
-									sqlQuery.Insert.Items.Add(new SelectQuery.SetExpression(field.Value, expr));
-							}
-						}
+                                var fieldValue = obj.GetType().GetProperty(field.Value.Name).GetValue(obj, null);
+                                if ((fieldValue is int && (int)fieldValue > 0) || (fieldValue != null && !(fieldValue is int)))
+                                {
+                                    var param = GetParameter(dataContextInfo.DataContext, field.Value);
+                                    ei.Queries[0].Parameters.Add(param);
+                                    sqlQuery.Insert.Items.Add(new SelectQuery.SetExpression(field.Value, param.SqlParameter));
+                                }
+                                else if (expr != null)
+                                    sqlQuery.Insert.Items.Add(new SelectQuery.SetExpression(field.Value, expr));
+                            }
+                        }
 
 						ei.SetNonQueryQuery();
 
