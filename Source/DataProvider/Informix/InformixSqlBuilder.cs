@@ -9,6 +9,7 @@ namespace LinqToDB.DataProvider.Informix
     using SqlQuery;
     using SqlProvider;
     using Common;
+    using Mapping;
 
     class InformixSqlBuilder : BasicSqlBuilder
 	{
@@ -17,14 +18,31 @@ namespace LinqToDB.DataProvider.Informix
 		{
 		}
 
-		public override int CommandCount(SelectQuery selectQuery)
+        SqlField _identityField;
+        public override int CommandCount(SelectQuery selectQuery)
 		{
+            var itemsWithSequence = selectQuery.Insert.Items.Any(i => ((ColumnDescriptor)((SqlField)i.Column).ColumnDescriptor).MemberInfo.GetCustomAttributes(typeof(SequenceNameAttribute), true).Any());
+            if (itemsWithSequence && selectQuery.IsInsert && selectQuery.Insert.WithIdentity)
+            {
+                _identityField = selectQuery.Insert.Into.Fields.Values.FirstOrDefault(f => f.IsIdentity);
+                return 3;
+            }
+            _identityField = null;
 			return selectQuery.IsInsert && selectQuery.Insert.WithIdentity ? 2 : 1;
 		}
 
 		protected override void BuildCommand(int commandNumber)
 		{
-			StringBuilder.AppendLine("SELECT DBINFO('sqlca.sqlerrd1') FROM systables where tabid = 1");
+            if (_identityField == null)
+            {
+                StringBuilder.AppendLine("SELECT DBINFO('sqlca.sqlerrd1') FROM systables where tabid = 1");
+            }
+            else
+            { 
+                var table = ((SqlTable)_identityField.Table);
+                var attr = GetSequenceNameAttribute(table, false);
+                StringBuilder.AppendLine($"SELECT {attr.SequenceName}.currval FROM systables where tabid = 1");
+            }
 		}
 
 		protected override ISqlBuilder CreateSqlBuilder()
